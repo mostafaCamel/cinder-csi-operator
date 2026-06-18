@@ -220,18 +220,28 @@ class CinderCSICharm(ops.CharmBase):
                 return False
         return True
 
+    def _pre_teardown(self, event):
+        """Delete manifests before a relation is removed, while credentials are still valid."""
+        if not self.unit.is_leader() or not self.stored.config_hash:
+            return
+        if self.app.planned_units() != 0:
+            return
+        self.unit.status = ops.MaintenanceStatus("Cleaning up Openstack Storage")
+        for controller in self.collector.manifests.values():
+            try:
+                controller.delete_manifests(ignore_unauthorized=True)
+            except ManifestClientError:
+                log.warning("Failed to delete manifests during relation teardown")
+        self.stored.config_hash = None
+
     def _cleanup(self, event):
-        if self.stored.config_hash:
-            self.unit.status = ops.MaintenanceStatus("Cleaning up Openstack Storage")
-            for controller in self.collector.manifests.values():
-                try:
-                    controller.delete_manifests(ignore_unauthorized=True)
-                except ManifestClientError:
-                    self.unit.status = ops.WaitingStatus("Waiting for kube-apiserver")
-                    event.defer()
-                    return
         self.unit.status = ops.MaintenanceStatus("Shutting down")
-        self._kubeconfig_path.parent.unlink(missing_ok=True)
+        if self._kubeconfig_path.parent.is_dir() and self._kubeconfig_path.parent.exists():
+            shutil.rmtree(self._kubeconfig_path.parent)
+        elif self._kubeconfig_path.parent.exists():
+            # Copied from similar code in openstack-cloud-controller-operator
+            # Note(Hue): This should never happen but whatever I guess...
+            self._kubeconfig_path.parent.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
