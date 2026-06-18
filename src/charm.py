@@ -5,6 +5,7 @@
 
 import logging
 import os
+import shutil
 from pathlib import Path
 
 import ops
@@ -48,6 +49,7 @@ class CinderCSICharm(ops.CharmBase):
         self.framework.observe(self.on.kube_control_relation_created, self._kube_control)
         self.framework.observe(self.on.kube_control_relation_joined, self._kube_control)
         self.framework.observe(self.on.kube_control_relation_changed, self._merge_config)
+        self.framework.observe(self.on.kube_control_relation_departed, self._pre_teardown)
         self.framework.observe(self.on.kube_control_relation_broken, self._merge_config)
 
         self.framework.observe(self.on.certificates_relation_created, self._merge_config)
@@ -57,6 +59,7 @@ class CinderCSICharm(ops.CharmBase):
         self.framework.observe(self.on.openstack_relation_created, self._merge_config)
         self.framework.observe(self.on.openstack_relation_joined, self._merge_config)
         self.framework.observe(self.on.openstack_relation_changed, self._merge_config)
+        self.framework.observe(self.on.openstack_relation_departed, self._pre_teardown)
         self.framework.observe(self.on.openstack_relation_broken, self._merge_config)
 
         self.framework.observe(self.on.list_versions_action, self._list_versions)
