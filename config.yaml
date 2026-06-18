@@ -1,4 +1,12 @@
 options:
+  cluster-name:
+    type: string
+    default: ""
+    description: |
+      Override the cluster name passed to the cinder CSI plugin.
+
+      If unset, the charm uses the kube-control relation cluster tag.
+
   availability-zone:
     type: string
     default: ""

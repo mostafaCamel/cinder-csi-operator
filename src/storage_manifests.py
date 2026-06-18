@@ -187,6 +187,7 @@ class StorageManifests(Manifests):
     @property
     def config(self) -> Dict:
         """Returns current config available from charm config and joined relations."""
+        cluster_name = self.charm_config.available_data.get("cluster-name")
         if labels := self.kube_control.get_controller_labels():
             stable_sort = sorted(labels, key=lambda val: val.key)
             controller_labels = {label.key: label.value for label in stable_sort}
@@ -201,7 +202,7 @@ class StorageManifests(Manifests):
             controller_labels = {"juju-application": self.kube_control.relation.app.name}
         config = {
             "image-registry": self.kube_control.get_registry_location(),
-            "cluster-name": self.kube_control.get_cluster_tag(),
+            "cluster-name": cluster_name or self.kube_control.get_cluster_tag(),
             "cloud-conf": (val := self.integrator.cloud_conf_b64) and val.decode(),
             "control-node-selector": controller_labels,
             "control-node-taints": self.kube_control.get_controller_taints()
