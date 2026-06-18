@@ -225,6 +225,14 @@ class StorageManifests(Manifests):
 
     def evaluate(self) -> Optional[str]:
         """Determine if manifest_config can be applied to manifests."""
+        configured_release = self.config.get("release")
+        if configured_release and configured_release not in self.releases:
+            supported = ", ".join(self.releases)
+            return (
+                f"storage-release '{configured_release}' is not supported. "
+                f"Available releases: {supported}"
+            )
+
         for prop in ["cloud-conf"]:
             if not self.config.get(prop):
                 return f"Storage manifests waiting for definition of {prop}"

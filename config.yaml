@@ -56,6 +56,9 @@ options:
       example)
         juju config cinder-csi storage-release='v1.7.3'
 
+      The manifests for the configured version must already be present in this
+      charm source tree under upstream/cloud_storage/manifests.
+      
       A list of supported versions is available through the action:
         juju run-action cinder-csi/leader list-releases --wait
 
